@@ -291,7 +291,7 @@ static void set_callbacks(Tox *tox)
 }
 
 /* tries to load avatar from disk for given client id string and set avatar based on saved png data
- *  avatar is avatar to initialize. Will be unset if no file is found on disk or if file is corrupt or too large, 
+ *  avatar is avatar to initialize. Will be unset if no file is found on disk or if file is corrupt or too large,
  *      otherwise will be set to avatar found on disk
  *  id is cid string of whose avatar to find(see also load_avatar in avatar.h)
  *  if png_data_out is not NULL, the png data loaded from disk will be copied to it.
@@ -322,46 +322,35 @@ static _Bool init_avatar(AVATAR *avatar, const char_t *id, uint8_t *png_data_out
     return 0;
 }
 
-static _Bool load_save(Tox *tox)
-{
-    {
-        uint8_t path[512], *p;
-        uint32_t size;
+static _Bool load_save(Tox *tox){
+    uint8_t path[512], *p;
+    uint32_t size;
 
-        /* Try the STS compliant save location */
+    /* Try the STS compliant save location */
+    p = path + datapath(path);
+    strcpy((char*)p, "tox_save.tox");
+    void *data = file_raw((char*)path, &size);
+    if(!data){ /* Try filename missing the .tox extension */
         p = path + datapath(path);
-        strcpy((char*)p, "tox_save.tox");
-        void *data = file_raw((char*)path, &size);
-        if(!data) {
-            /* Try filename missing the .tox extension */
-            p = path + datapath(path);
-            strcpy((char*)p, "tox_save");
-            data = file_raw((char*)path, &size);
-            if(!data) {
-                /* That didn't work, do we have a backup? */
-                p = path + datapath(path);
-                strcpy((char*)p, "tox_save.tmp");
-                data = file_raw((char*)path, &size);
-                if(!data){
-                    /* No backup huh? Is it in an old location we support? */
-                    p = path + datapath_old(path);
-                    strcpy((char*)p, "tox_save");
-                    data = file_raw((char*)path, &size);
-                    if (!data) {
-                        /* Well, lets try the current directory... */
-                        data = file_raw("tox_save", &size);
-                        if(!data) {
-                            /* F***it I give up! */
-                            return 0;
-                        }
-                    }
-                }
-            }
-        }
-
-        tox_load(tox, data, size);
-        free(data);
+        strcpy((char*)p, "tox_save");
+        data = file_raw((char*)path, &size);
+    } else if(!data) { /* That didn't work, do we have a backup? */
+        p = path + datapath(path);
+        strcpy((char*)p, "tox_save.tmp");
+        data = file_raw((char*)path, &size);
+    } else if(!data){ /* No backup huh? Is it in an old location we support? */
+        p = path + datapath_old(path);
+        strcpy((char*)p, "tox_save");
+        data = file_raw((char*)path, &size);
+    } else if(!data){ /* Well, lets try the current directory... */
+        data = file_raw("tox_save", &size);
+    } else if(!data) {
+        /* F***it I give up! */
+        return 0;
     }
+
+    tox_load(tox, data, size);
+    free(data);
 
     friends = tox_count_friendlist(tox);
 
