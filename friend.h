@@ -8,8 +8,8 @@ typedef struct friend {
     uint16_t call_width, call_height;
 
     uint8_t cid[TOX_PUBLIC_KEY_SIZE], tooltip[8];
-    STRING_IDX name_length, status_length, typed_length;
-    char_t *name, *status_message, *typed;
+    char_t *name, *alias, *status_message, *typed;
+    STRING_IDX name_length, alias_length, status_length, typed_length;
 
     MSG_DATA msg;
 
@@ -47,6 +47,7 @@ typedef struct groupchat {
 #define friend_id(f) (f -  friend)
 
 void friend_setname(FRIEND *f, char_t *name, STRING_IDX length);
+void friend_set_alias(FRIEND *f, char_t *alias, STRING_IDX length);
 void friend_addmessage(FRIEND *f, void *data);
 void friend_sendimage(FRIEND *f, UTOX_NATIVE_IMAGE *, uint16_t width, uint16_t height, UTOX_PNG_IMAGE, size_t png_size);
 void friend_recvimage(FRIEND *f, UTOX_PNG_IMAGE, size_t png_size);
