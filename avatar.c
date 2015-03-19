@@ -194,3 +194,41 @@ void self_remove_avatar()
     delete_saved_avatar(self.id);
     tox_postmessage(TOX_UNSETAVATAR, 0, 0, NULL);
 }
+
+int utox_avatar_update_friends(Tox *tox){
+    uint32_t i, friend_count, error_count = 0;
+    friend_count = tox_self_get_friend_list_size(tox);
+
+    uint32_t avatar_size;
+    uint8_t *avatar = malloc(TOX_AVATAR_MAX_DATA_LENGTH);
+    if(!load_avatar(self.id, avatar, &avatar_size)){
+        debug("Unable to load our avatar for sending!\n");
+        return -1;
+    }
+
+    for(i = 0; i <= friend_count; i++){
+        FRIEND *f = &friend[i];
+        f->has_current_avatar = 0;
+        if(f->online){
+            if(outgoing_file_send_avatar(tox, i, avatar, avatar_size)){ // error
+                error_count++;
+                if(f->has_current_avatar == 0){
+                    // error_count++;
+                    continue;
+                } else {
+                    debug("ERROR SETTING FRIEND(%u) AVATAR STATUS\n", i);
+                    return -1;
+                }
+            } else {
+                f->has_current_avatar = 1;
+                if(f->has_current_avatar == 1){
+                    continue;
+                } else {
+                    debug("ERROR SETTING FRIEND(%u) AVATAR STATUS\n", i);
+                    return -1;
+                }
+            }
+        }
+    }
+    return error_count;
+}

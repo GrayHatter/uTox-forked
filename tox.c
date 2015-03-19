@@ -13,6 +13,8 @@ static TOX_MSG tox_msg, audio_msg, video_msg, toxav_msg;
 static volatile _Bool tox_thread_msg, audio_thread_msg, video_thread_msg, toxav_thread_msg;
 static volatile _Bool save_needed = 1;
 
+#define Legacy(a,b,c) debug("Legacy call:\tYou shouldn't see this, please file a bug report!\nLegacy call:\t\t msg(%s) param1(%s) param2(%s)",a,b,c)
+
 /* Writes log filename for fid to dest. returns length written */
 static int log_file_name(uint8_t *dest, size_t size_dest, Tox *tox, int fid)
 {
@@ -701,8 +703,7 @@ static void tox_thread_message(Tox *tox, ToxAv *av, uint64_t time, uint8_t msg, 
          * param2: length of avatar data
          * data: raw avatar data (PNG)
          */
-        //TODO
-        //tox_set_avatar(tox, param1, data, param2);
+        utox_avatar_update_friends(tox);
         free(data);
         break;
     }
@@ -1384,19 +1385,12 @@ void tox_message(uint8_t tox_message_id, uint16_t param1, uint16_t param2, void 
         /* param1: friend id
            param2: png size
            data: png data
+
+        Work now done by file callback
+
         */
-        FRIEND *f = &friend[param1];
-        if (set_avatar(&f->avatar, data, param2, 0)) {
+       //Legacy(tox_message_id,param1,param2);
 
-            // save avatar and hash to disk
-            char_t cid[TOX_PUBLIC_KEY_SIZE * 2];
-            cid_to_string(cid, f->cid);
-            save_avatar(cid, data, param2);
-            save_avatar_hash(cid, f->avatar.hash);
-
-            updatefriend(f);
-        }
-        free(data);
         break;
     }
 
@@ -1575,119 +1569,17 @@ void tox_message(uint8_t tox_message_id, uint16_t param1, uint16_t param2, void 
     }
 
     case FRIEND_FILE_IN_NEW:
-    case FRIEND_FILE_IN_NEW_INLINE: {
-        FRIEND *f = &friend[param1];
-        // file_notify(f, data);
-        updatefriend(f);
-        break;
-    }
-
+    case FRIEND_FILE_IN_NEW_INLINE:
     case FRIEND_FILE_OUT_NEW:
-    case FRIEND_FILE_OUT_NEW_INLINE: {
-        FRIEND *f = &friend[param1];
-        updatefriend(f);
-        break;
-    }
-
-    case FRIEND_FILE_IN_STATUS: {
-        FRIEND *f = &friend[param1];
-        // FILE_TRANSFER *ft = &f->active_transfer[param2];
-
-        // TODO call this from the callback
-        // MSG_FILE *msg = ft->chatdata;
-        // msg->status = (size_t)data;
-
-        // file_notify(f, msg);
-
-        updatefriend(f);
-        break;
-    }
-
-    case FRIEND_FILE_OUT_STATUS: {
-        FRIEND *f = &friend[param1];
-        // FILE_TRANSFER *ft = &f->active_transfer[param2];
-
-        // MSG_FILE *msg = ft->chatdata;
-        // msg->status = (size_t)data;
-
-        // file_notify(f, msg);
-
-        updatefriend(f);
-        break;
-    }
-
-    case FRIEND_FILE_IN_DONE: {
-        FRIEND *f = &friend[param1];
-        // FILE_TRANSFER *ft = &f->active_transfer[param2];
-
-        // MSG_FILE *msg = ft->chatdata;
-        // msg->status = FILE_TRANSFER_STATUS_COMPLETED;
-        // msg->path = data;
-
-        // file_notify(f, msg);
-
-        updatefriend(f);
-        break;
-    }
-
-    case FRIEND_FILE_IN_DONE_INLINE: {
-        FRIEND *f = &friend[param1];
-        // FILE_TRANSFER *ft = &f->active_transfer[param2];
-
-        // MSG_FILE *msg = ft->chatdata;
-        // msg->status = FILE_TRANSFER_STATUS_COMPLETED;
-        // msg->path = data;
-
-        // friend_recvimage(f, data, msg->size);
-
-        // file_notify(f, msg);
-
-        updatefriend(f);
-        break;
-    }
-
-    case FRIEND_FILE_OUT_DONE: {
-        FRIEND *f = &friend[param1];
-        // FILE_TRANSFER *ft = &f->active_transfer[param2];
-
-        // MSG_FILE *msg = ft->chatdata;
-        // msg->status = FILE_TRANSFER_STATUS_COMPLETED;
-        // msg->path = data;
-
-        // file_notify(f, msg);
-
-        updatefriend(f);
-        break;
-    }
-
-    case FRIEND_FILE_IN_PROGRESS: {
-        FRIEND *f = &friend[param1];
-        // FILE_TRANSFER *ft = &f->active_transfer[param2];
-        // FILE_PROGRESS *p = data;
-
-        // MSG_FILE *msg = ft->chatdata;
-        // msg->progress = p->bytes;
-        // msg->speed = p->speed;
-
-        // free(p);
-
-        updatefriend(f);
-        break;
-    }
-
-    case FRIEND_FILE_OUT_PROGRESS: {
-        FRIEND *f = &friend[param1];
-        // FILE_TRANSFER *ft = &f->active_transfer[param2];
-        // FILE_PROGRESS *p = data;
-
-        // MSG_FILE *msg = ft->chatdata;
-        // msg->progress = p->bytes;
-        // msg->speed = p->speed;
-
-        // free(p);
-
-        updatefriend(f);
-        break;
+    case FRIEND_FILE_OUT_NEW_INLINE:
+    case FRIEND_FILE_IN_STATUS:
+    case FRIEND_FILE_OUT_STATUS:
+    case FRIEND_FILE_IN_DONE:
+    case FRIEND_FILE_IN_DONE_INLINE:
+    case FRIEND_FILE_OUT_DONE:
+    case FRIEND_FILE_IN_PROGRESS:
+    case FRIEND_FILE_OUT_PROGRESS:{
+        //Legacy(tox_message_id, param1, param2);
     }
 
     case GROUP_ADD: {

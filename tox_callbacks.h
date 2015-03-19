@@ -124,6 +124,8 @@ static void callback_connection_status(Tox *tox, uint32_t fid, TOX_CONNECTION st
     FRIEND *f = &friend[fid];
     int i;
 
+    // todo call avatar sending
+
     postmessage(FRIEND_ONLINE, fid, !!status, NULL);
 #if 0
     if(!status) {
